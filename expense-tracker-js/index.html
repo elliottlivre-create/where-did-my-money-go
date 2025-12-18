@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang=""en">
+<head>
+    <meta charset=""UTF-8" />
+    <title>Where did my money go?</title>
+    <link rel="stylesheet" href="style.css" />
+    </head>
+<body>
+    <main class="container">
+       <h1>Where did my money go?</h1>
+
+<section class="budget">
+  <h2>Monthly Budget</h2>
+  <input
+    type="number"
+    id="budget-input"
+    placeholder="Enter budget (SEK)"
+  />
+  <p>
+    Left to live for:
+    <strong><span id="remaining">0</span> SEK</strong>
+  </p>
+</section>
+
+<form id="expense-form">
+  <input
+    type="text"
+    id="title"
+    placeholder="Expense name"
+    required
+  />
+
+  <input
+    type="number"
+    id="amount"
+    placeholder="Amount (SEK)"
+    required
+  />
+
+  <button type="submit">Add expense</button>
+</form>
+
+        <section class="sumary">
+            <h2>Total: <span id="total">0</span> SEK</h2>
+        </section>
+       
+        <ul id="expense-list"></ul>
+        <canvas id="expenseChart"></canvas>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
