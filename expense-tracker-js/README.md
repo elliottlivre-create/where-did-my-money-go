@@ -18,4 +18,7 @@ se och förstå vart sina pengar tar vägen.
 - Protfolie projekt 
 
 ## Status 
-- In progress 
+- In progress
+
+- ## Deploy
+- - För att lätt köra systemet ladda ner alla filer, och kör i terminalen "open index.html" 
