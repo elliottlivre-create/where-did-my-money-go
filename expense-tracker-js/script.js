@@ -1,3 +1,44 @@
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+
+const lightBtn = document.getElementById("lightTheme");
+const darkBtn = document.getElementById("darkTheme");
+
+// öppna / stäng panel
+settingsBtn.addEventListener("click", () => {
+  settingsPanel.classList.toggle("hidden");
+});
+
+// stäng om man klickar utanför
+document.addEventListener("click", (e) => {
+  if (
+    !settingsPanel.contains(e.target) &&
+    !settingsBtn.contains(e.target)
+  ) {
+    settingsPanel.classList.add("hidden");
+  }
+});
+
+// sätt tema
+function setTheme(theme) {
+  document.body.setAttribute("data-theme", theme);
+  localStorage.setItem("theme", theme);
+  settingsPanel.classList.add("hidden");
+}
+
+lightBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setTheme("light");
+});
+
+darkBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setTheme("dark");
+});
+
+// ladda sparat tema
+const savedTheme = localStorage.getItem("theme") || "light";
+setTheme(savedTheme);
 const budgetInput = document.getElementById("budget-input");
 const remainingEl = document.getElementById("remaining");
 
