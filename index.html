@@ -1,38 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Where did my money go?</title>
     <link rel="stylesheet" href="style.css" />
     
     </head>
 <body>
+  <div class="app-shell">
+    <button id="settingsBtn" class="settings-btn" aria-label="Inställningar">
+      ⚙
+    </button>
+    <button id="calculatorBtn" class="settings-btn calculator-btn" aria-label="Miniräknare">
+      🧮
+    </button>
+    <button id="checklistBtn" class="settings-btn checklist-btn" aria-label="Checklista">
+      ✅
+    </button>
 
-  <button id="settingsBtn" class="settings-btn" aria-label="Settings">
-    ⚙
-  </button>
+    <div id="settingsPanel" class="settings-panel hidden">
+    <h3>Tema</h3>
 
-  <div id="settingsPanel" class="settings-panel hidden">
-  <h3>Theme</h3>
-
-  <div class="theme-options">
-    <button id="lightTheme" aria-label="Light theme">☀️</button>
-    <button id="darkTheme" aria-label="Dark theme">🌙</button>
+    <div class="theme-options">
+      <button id="lightTheme" aria-label="Ljust tema">☀️</button>
+      <button id="darkTheme" aria-label="Mörkt tema">🌙</button>
+    </div>
   </div>
-</div>
 
-    <main class="container">
+    <div id="calculatorPanel" class="settings-panel calculator-panel hidden">
+      <div class="panel-header">
+        <h3>Miniräknare</h3>
+        <button type="button" id="calculatorClose" class="panel-close" aria-label="Stäng miniräknaren">✕</button>
+      </div>
+      <section class="calculator">
+        <input
+          type="text"
+          id="calcInput"
+          placeholder="t.ex. 1200 + 399 / 2"
+        />
+
+        <button id="calcBtn" type="button">Beräkna</button>
+
+        <p>
+          Resultat:
+          <strong><span id="calcResult">0</span> SEK</strong>
+        </p>
+      </section>
+    </div>
+
+    <div id="checklistPanel" class="settings-panel checklist-panel hidden">
+    <div class="panel-header">
+      <h3>Checklista</h3>
+      <button type="button" id="checklistClose" class="panel-close" aria-label="Stäng checklistan">✕</button>
+    </div>
+
+    <form id="checklistForm">
+      <input
+        type="text"
+        id="checklistInput"
+        placeholder="t.ex. Betala hyran"
+        required
+      />
+      <button type="submit">Lägg till</button>
+    </form>
+
+    <ul id="checklistItems"></ul>
+  </div>
+
+      <main class="container">
        <h1>Where did my money go?</h1>
 
 <section class="budget">
-  <h2>Monthly Budget</h2>
+  <h2>Månadsbudget</h2>
   <input
     type="number"
     id="budget-input"
-    placeholder="Enter budget (SEK)"
+    placeholder="Ange budget (SEK)"
   />
   <p>
-    Left to live for:
+    Kvar att leva på:
     <strong><span id="remaining">0</span> SEK</strong>
   </p>
 </section>
@@ -41,27 +88,38 @@
   <input
     type="text"
     id="title"
-    placeholder="Expense name"
+    placeholder="Namn på utgift"
     required
   />
 
   <input
     type="number"
     id="amount"
-    placeholder="Amount (SEK)"
+    placeholder="Belopp (SEK)"
     required
   />
 
-  <button type="submit">Add expense</button>
+  <select id="category" aria-label="Kategori">
+    <option value="matDryck">Mat &amp; dryck</option>
+    <option value="boende">Hus och el</option>
+    <option value="studielan">Studielån</option>
+    <option value="transport">Transport</option>
+    <option value="abonnemang">Abonnemang &amp; tjänster</option>
+    <option value="nojen">Nöjen &amp; fritid</option>
+    <option value="ovrigt">Övrigt</option>
+  </select>
+
+  <button type="submit">Lägg till utgift</button>
 </form>
 
         <section class="sumary">
-            <h2>Total: <span id="total">0</span> SEK</h2>
+            <h2>Totalt: <span id="total">0</span> SEK</h2>
         </section>
        
-        <ul id="expense-list"></ul>
-        <canvas id="expenseChart"></canvas>
-    </main>
+          <div id="categoryLists" class="category-lists"></div>
+          <canvas id="expenseChart"></canvas>
+      </main>
+  </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -70,8 +128,8 @@
     <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js")
-      .then(() => console.log("Service Worker registered"))
-      .catch(err => console.error("SW failed", err));
+      .then(() => console.log("Service Worker registrerad"))
+      .catch(err => console.error("SW misslyckades", err));
   }
     </script>
 </body>

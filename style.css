@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   --bg-color: #f5f5f5;
   --card-color: #ffffff;
@@ -12,26 +18,53 @@ body {
   font-family: system-ui, sans-serif;
   background: var(--bg-color);
   color: var(--text-color);
-  padding: 40px;
+  padding: clamp(16px, 5vw, 40px);
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  position: relative;
+  padding-top: clamp(72px, 18vw, 96px);
 }
 
 .container {
-  max-width: 400px;
-  margin: auto;
+  width: 100%;
   background: var(--card-color);
   color: var(--text-color);
   padding: 20px;
   border-radius: 10px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
 }
 
 form {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
 }
 
-input, button {
-  padding: 8px;
+input,
+button,
+select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-size: 16px;
+  background: var(--card-color);
+  color: var(--text-color);
+}
+
+button {
+  border: none;
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
 }
 
 ul {
@@ -46,12 +79,12 @@ li {
 }
 
 .settings-btn {
-  position: fixed;
-  top: 16px;
-  right: 16px;
+  position: absolute;
+  top: 8px;
+  right: 0;
 
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
 
   border-radius: 50%;
   border: none;
@@ -59,7 +92,7 @@ li {
   background-color: var(--card-color);
   color: var(--text-color);
 
-  font-size: 40px;
+  font-size: 32px;
   cursor: pointer;
 
   display: flex;
@@ -67,14 +100,26 @@ li {
   justify-content: center;
 
   z-index: 1000;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.checklist-btn {
+  left: 0;
+  right: auto;
+}
+
+.calculator-btn {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
 }
 
 .settings-panel {
-  position: fixed;
+  position: absolute;
   top: 72px;
-  right: 16px;
+  right: 8px;
 
-  width: 180px;
+  width: min(220px, calc(50% - 12px));
   padding: 16px;
 
   background-color: var(--card-color);
@@ -85,11 +130,41 @@ li {
   z-index: 1000;
 }
 
+.checklist-panel {
+  left: 8px;
+  right: auto;
+  width: min(240px, calc(50% - 12px));
+}
+
+.calculator-panel {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(260px, 85vw);
+}
+
 .settings-panel h3 {
-  margin: 0 0 12px 0;
+  margin: 0;
   font-size: 14px;
   text-transform: uppercase;
   opacity: 0.7;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.panel-close {
+  border: none;
+  background: none;
+  color: var(--text-color);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
 }
 
 .theme-options {
@@ -106,4 +181,122 @@ li {
 
 .hidden {
   display: none;
+}   
+
+.calculator {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.calculator input {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.calculator button {
+  width: 100%;
+}
+
+.category-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.category-group {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.category-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.category-heading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.category-heading span {
+  font-weight: 600;
+}
+
+.category-empty {
+  font-size: 14px;
+  opacity: 0.7;
+  margin: 0;
+}
+
+#checklistItems {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+}
+
+#checklistForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#checklistForm input,
+#checklistForm button {
+  width: 100%;
+}
+
+#checklistItems li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+#checklistItems input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+.checklist-delete {
+  margin-left: auto;
+  padding: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-color);
+}
+
+@media (max-width: 480px) {
+  .settings-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+    top: 4px;
+  }
+
+  .settings-panel {
+    top: 64px;
+  }
+
+  form {
+    flex-direction: column;
+  }
+
+  form > * {
+    width: 100%;
+  }
+
+  .calculator,
+  .budget,
+  form,
+  .sumary {
+    padding-bottom: 12px;
+  }
 }
