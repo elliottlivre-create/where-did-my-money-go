@@ -9,6 +9,9 @@ const checklistItems = document.getElementById("checklistItems");
 const calculatorBtn = document.getElementById("calculatorBtn");
 const calculatorPanel = document.getElementById("calculatorPanel");
 const calculatorCloseBtn = document.getElementById("calculatorClose");
+const monthLabel = document.getElementById("monthLabel");
+const prevMonthBtn = document.getElementById("prevMonth");
+const nextMonthBtn = document.getElementById("nextMonth");
 
 const lightBtn = document.getElementById("lightTheme");
 const darkBtn = document.getElementById("darkTheme");
@@ -21,8 +24,86 @@ const categories = [
   { id: "nojen", label: "Nöjen & fritid", icon: "🎉" },
   { id: "ovrigt", label: "Övrigt", icon: "🧾" },
 ];
+const STORAGE_KEY = "budgetApp";
 const panels = [settingsPanel, checklistPanel, calculatorPanel];
 const panelButtons = [settingsBtn, checklistBtn, calculatorBtn];
+
+function formatMonth(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
+function currentMonthId() {
+  return formatMonth(new Date());
+}
+
+function shiftMonth(monthId, delta) {
+  const [year, month] = monthId.split("-").map(Number);
+  const d = new Date(year, month - 1 + delta, 1);
+  return formatMonth(d);
+}
+
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+
+function formatMonthLabel(monthId) {
+  const [year, month] = monthId.split("-").map(Number);
+  const name = monthNames[month - 1] || monthId;
+  return `${name} ${year}`;
+}
+
+function loadRoot() {
+  return (
+    JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+      activeMonth: currentMonthId(),
+      months: {},
+    }
+  );
+}
+
+function saveRoot() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(root));
+}
+
+let root = loadRoot();
+let activeMonth = root.activeMonth || currentMonthId();
+
+function ensureMonthInRoot(monthId) {
+  if (!root.months[monthId]) {
+    root.months[monthId] = { budget: 0, expenses: [], checklist: [] };
+  }
+}
+
+function migrateLegacy() {
+  const legacyExpenses = JSON.parse(localStorage.getItem("expenses") || "[]");
+  const legacyBudget = Number(localStorage.getItem("budget")) || 0;
+  const legacyChecklist = JSON.parse(localStorage.getItem("checklist") || "[]");
+
+  if (
+    legacyExpenses.length ||
+    legacyBudget ||
+    legacyChecklist.length
+  ) {
+    ensureMonthInRoot(activeMonth);
+    const month = root.months[activeMonth];
+    if (!month.expenses.length && month.budget === 0 && !month.checklist.length) {
+      month.budget = legacyBudget;
+      month.expenses = legacyExpenses.map((expense) => ({
+        title: expense.title,
+        amount: Number(expense.amount),
+        category: expense.category || "ovrigt",
+        createdAt: expense.createdAt || new Date().toISOString(),
+      }));
+      month.checklist = legacyChecklist;
+      saveRoot();
+    }
+  }
+}
+
+migrateLegacy();
+ensureMonthInRoot(activeMonth);
+root.activeMonth = activeMonth;
+saveRoot();
 
 function closeAllPanels() {
   panels.forEach((panel) => panel.classList.add("hidden"));
@@ -75,9 +156,27 @@ setTheme(savedTheme);
 const budgetInput = document.getElementById("budget-input");
 const remainingEl = document.getElementById("remaining");
 
-let budget = Number(localStorage.getItem("budget")) || 0;
-budgetInput.value = budget;
-function renderChart(groupedData = getGroupedExpenses()) {
+const chartCanvas = document.getElementById("expenseChart");
+let expenseChart = null;
+const form = document.getElementById("expense-form");
+const titleInput = document.getElementById("title");
+const amountInput = document.getElementById("amount");
+const categorySelect = document.getElementById("category");
+const categoryLists = document.getElementById("categoryLists");
+const totalEl = document.getElementById("total");
+
+function getMonthData() {
+  ensureMonthInRoot(activeMonth);
+  return root.months[activeMonth];
+}
+
+function saveMonthData(monthData) {
+  root.months[activeMonth] = monthData;
+  root.activeMonth = activeMonth;
+  saveRoot();
+}
+
+function renderChart(groupedData) {
   const visibleGroups = groupedData.filter((group) => group.total > 0);
   const labels = visibleGroups.map((group) =>
     `${group.icon ? group.icon + " " : ""}${group.label}`
@@ -119,50 +218,39 @@ function renderChart(groupedData = getGroupedExpenses()) {
     },
   });
 }
-const chartCanvas = document.getElementById("expenseChart");
-let expenseChart = null;
-const form = document.getElementById("expense-form");
-const titleInput = document.getElementById("title");
-const amountInput = document.getElementById("amount");
-const categorySelect = document.getElementById("category");
-const categoryLists = document.getElementById("categoryLists");
-const totalEl = document.getElementById("total");
-
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-expenses = expenses.map((expense) => ({
-  title: expense.title,
-  amount: Number(expense.amount),
-  category: expense.category || "ovrigt",
-}));
 
 function deleteExpense(index) {
-  expenses.splice(index, 1);
-  renderExpenses();
+  const monthData = getMonthData();
+  monthData.expenses.splice(index, 1);
+  saveMonthData(monthData);
+  renderAll();
 }
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
 
+  const monthData = getMonthData();
   const expense = {
     title: titleInput.value,
     amount: parseFloat(amountInput.value),
     category: categorySelect.value,
+    createdAt: new Date().toISOString(),
   };
 
-  expenses.push(expense);
+  monthData.expenses.push(expense);
+  saveMonthData(monthData);
   form.reset();
-  renderExpenses();
+  renderAll();
 });
 
-function updateRemaining(totalExpenses) {
+function updateRemaining(totalExpenses, budget) {
   const remaining = budget - totalExpenses;
   remainingEl.textContent = remaining.toLocaleString("sv-SE");
 }
 
-renderExpenses();
-function renderExpenses() {
+function renderExpenses(monthData) {
   categoryLists.innerHTML = "";
-  const grouped = getGroupedExpenses();
+  const grouped = getGroupedExpenses(monthData.expenses);
 
   grouped.forEach((group) => {
     const section = document.createElement("section");
@@ -204,12 +292,11 @@ function renderExpenses() {
 
   const total = grouped.reduce((sum, group) => sum + group.total, 0);
   totalEl.textContent = total.toLocaleString("sv-SE");
-  updateRemaining(total);
-  localStorage.setItem("expenses", JSON.stringify(expenses));
+  updateRemaining(total, monthData.budget);
   renderChart(grouped);
 }
 
-function getGroupedExpenses() {
+function getGroupedExpenses(expenses = []) {
   const map = {};
   categories.forEach((category) => {
     map[category.id] = { ...category, items: [], total: 0 };
@@ -229,11 +316,31 @@ function getGroupedExpenses() {
   return Object.values(map);
 }
 
+function renderAll() {
+  const monthData = getMonthData();
+  monthLabel.textContent = formatMonthLabel(activeMonth);
+  budgetInput.value = monthData.budget || "";
+  renderExpenses(monthData);
+  renderChecklist(monthData);
+}
+
+function changeMonth(delta) {
+  activeMonth = shiftMonth(activeMonth, delta);
+  ensureMonthInRoot(activeMonth);
+  root.activeMonth = activeMonth;
+  saveRoot();
+  renderAll();
+}
+
+prevMonthBtn.addEventListener("click", () => changeMonth(-1));
+nextMonthBtn.addEventListener("click", () => changeMonth(1));
+
 
 budgetInput.addEventListener("input", () => {
-  budget = Number(budgetInput.value);
-  localStorage.setItem("budget", budget);
-  renderExpenses();
+  const monthData = getMonthData();
+  monthData.budget = Number(budgetInput.value) || 0;
+  saveMonthData(monthData);
+  renderAll();
 });
 
 const calcInput = document.getElementById("calcInput");
@@ -255,8 +362,6 @@ calcBtn.addEventListener("click", () => {
   }
 });
 
-let checklist = JSON.parse(localStorage.getItem("checklist")) || [];
-
 // öppna / stäng checklist-panel
 checklistBtn.addEventListener("click", () => {
   togglePanel(checklistPanel);
@@ -277,7 +382,8 @@ calculatorCloseBtn.addEventListener("click", () => {
 });
 
 // render checklist
-function renderChecklist() {
+function renderChecklist(monthData = getMonthData()) {
+  const checklist = monthData.checklist || [];
   checklistItems.innerHTML = "";
 
   checklist.forEach((item, index) => {
@@ -288,8 +394,10 @@ function renderChecklist() {
     checkbox.checked = item.done;
 
     checkbox.addEventListener("change", () => {
-      checklist[index].done = checkbox.checked;
-      saveChecklist();
+      const updated = getMonthData();
+      updated.checklist[index].done = checkbox.checked;
+      saveMonthData(updated);
+      renderChecklist(updated);
     });
 
     const text = document.createElement("span");
@@ -313,26 +421,32 @@ function renderChecklist() {
 }
 
 function removeChecklistItem(index) {
-  checklist.splice(index, 1);
-  saveChecklist();
+  const monthData = getMonthData();
+  monthData.checklist.splice(index, 1);
+  saveMonthData(monthData);
+  renderChecklist(monthData);
 }
 
-function saveChecklist() {
-  localStorage.setItem("checklist", JSON.stringify(checklist));
-  renderChecklist();
+function saveChecklist(newChecklist) {
+  const monthData = getMonthData();
+  monthData.checklist = newChecklist;
+  saveMonthData(monthData);
+  renderChecklist(monthData);
 }
 
 // add item
 checklistForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  checklist.push({
+  const monthData = getMonthData();
+  monthData.checklist.push({
     text: checklistInput.value,
     done: false
   });
 
   checklistInput.value = "";
-  saveChecklist();
+  saveMonthData(monthData);
+  renderChecklist(monthData);
 });
 
-renderChecklist();
+renderAll();
