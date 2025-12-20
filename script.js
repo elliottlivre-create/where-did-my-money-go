@@ -22,6 +22,7 @@ const categories = [
   { id: "transport", label: "Transport", icon: "🚗" },
   { id: "abonnemang", label: "Abonnemang & tjänster", icon: "📱" },
   { id: "nojen", label: "Nöjen & fritid", icon: "🎉" },
+  { id: "sparande", label: "Sparande", icon: "💰" },
   { id: "ovrigt", label: "Övrigt", icon: "🧾" },
 ];
 const STORAGE_KEY = "budgetApp";
